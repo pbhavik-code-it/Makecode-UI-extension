@@ -1,0 +1,11 @@
+{
+  "name": "PIXELBIT UI",
+  "description": "A customizable menu engine for MakeCode Arcade.",
+  "dependencies": {
+    "core": "*"
+  },
+  "files": [
+    "main.ts"
+  ],
+  "public": true
+}
