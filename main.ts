@@ -1,30 +1,36 @@
 // PIXELBIT UI - a simple reusable menu engine for MakeCode Arcade
 // Initial version: one active menu, UP/DOWN to navigate, A to select.
 
+
 namespace pixelMenu {
     let menuItems: string[] = []
     let selected = 0
-    let menuTitle = "PIXELBIT"
+    let menuTitle = "MICRO:BIT CONSOLE"
     let menuSprite: Sprite = null
     let menuWidth = 120
     let menuHeight = 100
+
     let backgroundColor = 1
     let textColor = 7
     let highlightColor = 9
     let highlightTextColor = 1
+
     let selectHandler: (index: number, item: string) => void = null
     let menuVisible = false
+    let controlsRegistered = false
 
     function redraw() {
         if (!menuSprite) return
 
         let img = image.create(menuWidth, menuHeight)
         img.fill(backgroundColor)
+
         img.print(menuTitle, 5, 6, highlightColor)
         img.drawLine(5, 19, menuWidth - 5, 19, highlightColor)
 
         for (let i = 0; i < menuItems.length; i++) {
             let y = 25 + i * 16
+
             if (y + 10 >= menuHeight) break
 
             if (i == selected) {
@@ -39,10 +45,39 @@ namespace pixelMenu {
         menuSprite.setImage(img)
     }
 
-    //% block="create PIXELBIT menu"
+    function registerControls() {
+        if (controlsRegistered) return
+        controlsRegistered = true
+
+        controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+            if (!menuSprite || !menuVisible || menuItems.length == 0) return
+
+            selected = (selected + menuItems.length - 1) % menuItems.length
+            redraw()
+        })
+
+        controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
+            if (!menuSprite || !menuVisible || menuItems.length == 0) return
+
+            selected = (selected + 1) % menuItems.length
+            redraw()
+        })
+
+        controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+            if (!menuSprite || !menuVisible || menuItems.length == 0) return
+
+            if (selectHandler) {
+                selectHandler(selected, menuItems[selected])
+            }
+        })
+    }
+
+    //% block="create Micro:Bit Console menu"
     //% blockId=pixelmenu_create
     //% weight=100
     export function create() {
+        registerControls()
+
         menuItems = []
         selected = 0
         menuVisible = true
@@ -51,14 +86,18 @@ namespace pixelMenu {
             menuSprite.destroy()
         }
 
-        menuSprite = sprites.create(image.create(menuWidth, menuHeight), SpriteKind.Player)
+        menuSprite = sprites.create(
+            image.create(menuWidth, menuHeight),
+            SpriteKind.Player
+        )
+
         menuSprite.setPosition(80, 60)
         redraw()
     }
 
     //% block="set menu title to $name"
     //% blockId=pixelmenu_set_title
-    //% name.defl="PIXELBIT OS"
+    //% name.defl="MICRO:BIT CONSOLE"
     //% weight=90
     export function setTitle(name: string) {
         menuTitle = name
@@ -82,6 +121,7 @@ namespace pixelMenu {
     export function setSize(width: number, height: number) {
         menuWidth = Math.max(40, Math.min(160, width))
         menuHeight = Math.max(35, Math.min(120, height))
+
         if (menuSprite) {
             menuSprite.setImage(image.create(menuWidth, menuHeight))
             redraw()
@@ -114,26 +154,28 @@ namespace pixelMenu {
         redraw()
     }
 
-    //% block="show PIXELBIT menu"
+    //% block="show Micro:Bit Console menu"
     //% blockId=pixelmenu_show
     //% weight=40
     export function show() {
         if (!menuSprite) return
+
         menuVisible = true
         menuSprite.setFlag(SpriteFlag.Invisible, false)
         redraw()
     }
 
-    //% block="hide PIXELBIT menu"
+    //% block="hide Micro:Bit Console menu"
     //% blockId=pixelmenu_hide
     //% weight=30
     export function hide() {
         if (!menuSprite) return
+
         menuVisible = false
         menuSprite.setFlag(SpriteFlag.Invisible, true)
     }
 
-    //% block="when PIXELBIT menu item selected"
+    //% block="when Micro:Bit Console menu item selected"
     //% blockId=pixelmenu_on_select
     //% draggableParameters="reporter"
     //% weight=20
@@ -147,23 +189,4 @@ namespace pixelMenu {
     export function selectedIndex(): number {
         return selected
     }
-
-    controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
-        if (!menuSprite || !menuVisible || menuItems.length == 0) return
-        selected = (selected + menuItems.length - 1) % menuItems.length
-        redraw()
-    })
-
-    controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
-        if (!menuSprite || !menuVisible || menuItems.length == 0) return
-        selected = (selected + 1) % menuItems.length
-        redraw()
-    })
-
-    controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-        if (!menuSprite || !menuVisible || menuItems.length == 0) return
-        if (selectHandler) {
-            selectHandler(selected, menuItems[selected])
-        }
-    })
 }
